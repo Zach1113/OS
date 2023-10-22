@@ -10,7 +10,8 @@
 #define BUFFER_SIZE 128
 
 #define PROC_NAME "seconds"
-unsigned long init_jiffies,total_elapsed_time; //可以用這裡的變數
+unsigned long init_jiffies, total_elapsed_time, endj; //可以用這裡的變數
+int hz = HZ;
 
 /**
  * Function prototypes
@@ -29,18 +30,17 @@ static struct file_operations proc_ops = {
 static int proc_init(void)
 {
     
-    //////////////////////
-    ////<在此加入程式碼>////
-    /////////////////////
-    //用變數記住載入模組時的jiffies
-    
-    
-        // 創出/proc/seconds這個項目
-        proc_create(PROC_NAME, 0, NULL, &proc_ops);
+   	//////////////////////
+    	////<在此加入程式碼>//
+    	//////////////////////
+   	//用變數記住載入模組時的jiffies
+    	init_jiffies = jiffies;    
+    	// 創出/proc/seconds這個項目
+    	proc_create(PROC_NAME, 0, NULL, &proc_ops);
 
-        printk(KERN_INFO "/proc/%s created\n", PROC_NAME);
+    	printk(KERN_INFO "/proc/%s created\n", PROC_NAME);
 
-	return 0;
+    	return 0;
 }
 
 // 當模組被移除會觸發這個函式 無返回值
@@ -70,12 +70,10 @@ static ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, 
 
         // 計算目前jiffies和模組初始jiffies的差，並除以HZ值
         // 將結果透過sprintf放到buffer中，使用%ld印出
+	endj = jiffies;
+	total_elapsed_time = (endj - init_jiffies) / hz;
         rv = sprintf(buffer,
-                     "Module has been running for %ld seconds\n",
-                     //////////////////////
-                     ////<在此加入程式碼>////
-                     /////////////////////
-                     );
+                     "Module has been running for %ld seconds\n", total_elapsed_time);
 
     
         // 將buffer的內容複製到用戶空間usr_buf
